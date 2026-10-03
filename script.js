@@ -255,6 +255,17 @@ let gameStarted = false;
 
 
 // ------------------------------------------
+// MOBILE TOUCH VARIABLES
+// ------------------------------------------
+
+let touchItem = null;
+
+let touchStartX = 0;
+
+let touchStartY = 0;
+
+
+// ------------------------------------------
 // ELEMENTS
 // ------------------------------------------
 
@@ -324,7 +335,6 @@ const categories =
     );
 
 
-
 // ------------------------------------------
 // SHUFFLE FUNCTION
 // ------------------------------------------
@@ -363,7 +373,6 @@ function shuffle(array) {
     return shuffled;
 
 }
-
 
 
 // ------------------------------------------
@@ -440,7 +449,6 @@ function stopTimer() {
 }
 
 
-
 // ------------------------------------------
 // CREATE ITEMS
 // ------------------------------------------
@@ -513,7 +521,7 @@ function loadItems() {
 
 
             // --------------------------------
-            // DRAG START
+            // DESKTOP DRAG START
             // --------------------------------
 
             card.addEventListener(
@@ -551,7 +559,7 @@ function loadItems() {
 
 
             // --------------------------------
-            // DRAG END
+            // DESKTOP DRAG END
             // --------------------------------
 
             card.addEventListener(
@@ -569,11 +577,275 @@ function loadItems() {
                 }
             );
 
+
+            // =================================
+            // MOBILE TOUCH START
+            // =================================
+
+            card.addEventListener(
+                "touchstart",
+                function(event) {
+
+                    if (!gameStarted) {
+                        return;
+                    }
+
+
+                    touchItem =
+                        this;
+
+
+                    const touch =
+                        event.touches[0];
+
+
+                    touchStartX =
+                        touch.clientX;
+
+
+                    touchStartY =
+                        touch.clientY;
+
+
+                    this.classList.add(
+                        "dragging"
+                    );
+
+
+                    event.preventDefault();
+
+                },
+                {
+                    passive: false
+                }
+            );
+
+
+            // =================================
+            // MOBILE TOUCH MOVE
+            // =================================
+
+            card.addEventListener(
+                "touchmove",
+                function(event) {
+
+                    if (
+                        !gameStarted ||
+                        !touchItem
+                    ) {
+                        return;
+                    }
+
+
+                    event.preventDefault();
+
+
+                    const touch =
+                        event.touches[0];
+
+
+                    const x =
+                        touch.clientX;
+
+
+                    const y =
+                        touch.clientY;
+
+
+                    // Find element underneath finger
+
+                    const element =
+                        document.elementFromPoint(
+                            x,
+                            y
+                        );
+
+
+                    // Find category
+
+                    const category =
+                        element
+                            ? element.closest(
+                                ".category"
+                            )
+                            : null;
+
+
+                    // Remove old highlights
+
+                    categories.forEach(
+                        cat => {
+
+                            cat.classList.remove(
+                                "drag-over"
+                            );
+
+                        }
+                    );
+
+
+                    // Highlight category
+
+                    if (category) {
+
+                        category.classList.add(
+                            "drag-over"
+                        );
+
+                    }
+
+                },
+                {
+                    passive: false
+                }
+            );
+
+
+            // =================================
+            // MOBILE TOUCH END
+            // =================================
+
+            card.addEventListener(
+                "touchend",
+                function(event) {
+
+                    if (
+                        !gameStarted ||
+                        !touchItem
+                    ) {
+                        return;
+                    }
+
+
+                    event.preventDefault();
+
+
+                    const touch =
+                        event.changedTouches[0];
+
+
+                    const x =
+                        touch.clientX;
+
+
+                    const y =
+                        touch.clientY;
+
+
+                    // Find element underneath finger
+
+                    const element =
+                        document.elementFromPoint(
+                            x,
+                            y
+                        );
+
+
+                    // Find category
+
+                    const category =
+                        element
+                            ? element.closest(
+                                ".category"
+                            )
+                            : null;
+
+
+                    // Remove highlights
+
+                    categories.forEach(
+                        cat => {
+
+                            cat.classList.remove(
+                                "drag-over"
+                            );
+
+                        }
+                    );
+
+
+                    // Drop on category
+
+                    if (category) {
+
+                        const selectedCategory =
+                            category.dataset.category;
+
+
+                        const correctCategory =
+                            touchItem.dataset.answer;
+
+
+                        if (
+                            selectedCategory ===
+                            correctCategory
+                        ) {
+
+                            correctDrop(
+                                touchItem,
+                                category
+                            );
+
+                        } else {
+
+                            wrongDrop(
+                                category
+                            );
+
+                        }
+
+                    }
+
+
+                    touchItem.classList.remove(
+                        "dragging"
+                    );
+
+
+                    touchItem =
+                        null;
+
+                },
+                {
+                    passive: false
+                }
+            );
+
+
+            // =================================
+            // MOBILE TOUCH CANCEL
+            // =================================
+
+            card.addEventListener(
+                "touchcancel",
+                function() {
+
+                    this.classList.remove(
+                        "dragging"
+                    );
+
+
+                    touchItem =
+                        null;
+
+
+                    categories.forEach(
+                        category => {
+
+                            category.classList.remove(
+                                "drag-over"
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
         }
     );
 
 }
-
 
 
 // ------------------------------------------
@@ -662,7 +934,6 @@ categories.forEach(
                     draggedItem.dataset.answer;
 
 
-
                 // ----------------------------
                 // CORRECT
                 // ----------------------------
@@ -678,7 +949,6 @@ categories.forEach(
                     );
 
                 }
-
 
 
                 // ----------------------------
@@ -700,7 +970,6 @@ categories.forEach(
 );
 
 
-
 // ------------------------------------------
 // CORRECT DROP
 // ------------------------------------------
@@ -715,7 +984,6 @@ function correctDrop(
     remaining--;
 
 
-
     // Update score
 
     scoreElement.textContent =
@@ -724,7 +992,6 @@ function correctDrop(
 
     remainingElement.textContent =
         remaining;
-
 
 
     // Feedback
@@ -739,14 +1006,12 @@ function correctDrop(
         "feedback correct";
 
 
-
     // Destination
 
     const placedItems =
         category.querySelector(
             ".placed-items"
         );
-
 
 
     // Hide drop message
@@ -763,7 +1028,6 @@ function correctDrop(
             "none";
 
     }
-
 
 
     // Create placed item
@@ -796,7 +1060,6 @@ function correctDrop(
     );
 
 
-
     // Animate category
 
     category.style.transform =
@@ -812,7 +1075,6 @@ function correctDrop(
         },
         250
     );
-
 
 
     // Remove original item
@@ -832,6 +1094,8 @@ function correctDrop(
 
             draggedItem = null;
 
+            touchItem = null;
+
             checkComplete();
 
         },
@@ -839,7 +1103,6 @@ function correctDrop(
     );
 
 }
-
 
 
 // ------------------------------------------
@@ -875,7 +1138,6 @@ function wrongDrop(category) {
 }
 
 
-
 // ------------------------------------------
 // CHECK GAME COMPLETE
 // ------------------------------------------
@@ -890,14 +1152,12 @@ function checkComplete() {
         stopTimer();
 
 
-
         // Final score
 
         finalScore.textContent =
             score +
             " / " +
             itemsData.length;
-
 
 
         // Final time
@@ -908,13 +1168,11 @@ function checkComplete() {
             );
 
 
-
         // Show result
 
         result.classList.remove(
             "hidden"
         );
-
 
 
         setTimeout(
@@ -935,7 +1193,6 @@ function checkComplete() {
     }
 
 }
-
 
 
 // ------------------------------------------
@@ -995,7 +1252,6 @@ startButton.addEventListener(
 );
 
 
-
 // ------------------------------------------
 // RESTART GAME
 // ------------------------------------------
@@ -1029,6 +1285,8 @@ function restartGame() {
     draggedItem =
         null;
 
+    touchItem =
+        null;
 
 
     // Reset display
@@ -1057,13 +1315,11 @@ function restartGame() {
         "feedback";
 
 
-
     // Hide result
 
     result.classList.add(
         "hidden"
     );
-
 
 
     // Reset start button
@@ -1074,7 +1330,6 @@ function restartGame() {
 
     startButton.textContent =
         "▶️ ක්‍රීඩාව ආරම්භ කරන්න";
-
 
 
     // Clear categories
@@ -1119,11 +1374,9 @@ function restartGame() {
     );
 
 
-
     // Load shuffled items
 
     loadItems();
-
 
 
     // Scroll top
@@ -1137,7 +1390,6 @@ function restartGame() {
     });
 
 }
-
 
 
 // ------------------------------------------
